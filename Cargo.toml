@@ -1,0 +1,26 @@
+[package]
+name = "nspray"
+version = "0.1.0"
+
+[dependencies]
+ndless = "0.8.7"
+ndless-sdl = "0.2.0"
+ndless-handler = "0.3.0"
+ndless-sys = "0.2.0"
+#ndless-freetype = { path = "/home/the/Src/ndless-freetype" }
+
+[package.metadata.zehn]
+name = "Hello World"
+compress = true
+notice = "Press ESC to exit"
+flags = "--240x320-support true"
+
+[profile.dev]
+overflow-checks = false
+
+[features]
+default = []
+#std = []
+
+[target.i686-unknown-linux-gnu.dependencies]
+libc = "0.2.137"
