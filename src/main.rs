@@ -43,10 +43,10 @@ fn main() {
     let mut screen_buff = [0u16; 320 * 240];
 
     let camera = Camera::new(
-        Vec3FI32::new(fxi32!(-2), fxi32!(2), fxi32!(1)),
+        Vec3FI32::new(fxi32!(0), fxi32!(0), fxi32!(0)),
         Vec3FI32::new(fxi32!(0), fxi32!(0), fxi32!(-1)),
         Vec3FI32::new(fxi32!(0), fxi32!(1), fxi32!(0)),
-        fxi32!(90),
+        fxi32!(45),
         fxi32!(320) / fxi32!(240),
     );
 

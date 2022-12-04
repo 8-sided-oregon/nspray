@@ -1,5 +1,3 @@
-use alloc::format;
-
 use crate::{camera::Camera, fxi32, ray::Ray, vec3::Vec3FI32, world::World};
 
 pub struct Renderer {
@@ -37,21 +35,25 @@ impl Renderer {
             for j in 0..self.width {
                 let ray = self
                     .camera
-                    .get_ray(step_v * (i as i32), step_u * (j as i32));
+                    .get_ray(step_u * (j as i32), step_v * (i as i32));
+
                 let color = self.ray_color(&ray);
 
-                let r: i32 = (color.x * 255).into();
-                let g: i32 = (color.y * 255).into();
-                let b: i32 = (color.z * 255).into();
+                let r: i32 = (color.x * 0x1f).into();
+                let g: i32 = (color.y * 0x1f).into();
+                let b: i32 = (color.z * 0x1f).into();
+
+                let r = r.clamp(0, 0x1f) as u16;
+                let g = g.clamp(0, 0x1f) as u16;
+                let b = b.clamp(0, 0x1f) as u16;
 
                 let index = (i as usize) * (self.width as usize) + (j as usize);
 
                 // RGB555
-                buffer[index] =
-                    (r as u16 & 0x1f) << 10 | (g as u16 & 0x1f) << 5 | (b as u16 & 0x1f);
+                buffer[index] = r << 10 | g << 5 | b;
             }
 
-            if i % 10 == 9 {
+            if i % 10 == 0 {
                 progress_callback(buffer, i);
             }
         }

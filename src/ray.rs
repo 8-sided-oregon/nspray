@@ -1,5 +1,6 @@
 use crate::{fixed::FixedI32, vec3::Vec3FI32};
 
+#[derive(Debug)]
 pub struct Ray {
     origin: Vec3FI32,
     dir: Vec3FI32,

@@ -1,5 +1,8 @@
+use alloc::format;
+
 use crate::{
     fixed::{self, FixedI32},
+    fxi32,
     ray::Ray,
     vec3::Vec3FI32,
 };
@@ -31,8 +34,7 @@ impl Camera {
         let horizontal = u * viewport_width;
         let vertical = v * viewport_height;
 
-        let two = FixedI32::from_components(2, 0);
-        let bottom_left = origin - horizontal / two - vertical / two - w;
+        let bottom_left = origin - horizontal / fxi32!(2) - vertical / fxi32!(2) - w;
 
         Self {
             origin,

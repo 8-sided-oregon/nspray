@@ -1,10 +1,13 @@
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use core::{
+    fmt::{self, Display, Formatter},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
+};
 
 use crate::fixed::FixedI32;
 
 pub type Vec3FI32 = Vec3<FixedI32>;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Vec3<T> {
     pub x: T,
     pub y: T,
@@ -19,7 +22,7 @@ where
         Self { x, y, z }
     }
 
-    fn mag_squared(self) -> T
+    pub fn mag_squared(self) -> T
     where
         T: Mul<Output = T> + Add<Output = T>,
     {
@@ -37,9 +40,9 @@ where
     where
         T: Mul<Output = T> + Sub<Output = T>,
     {
-        let x = self.y * self.z - self.z * self.y;
-        let y = self.z * self.x - self.x * self.z;
-        let z = self.x * self.y - self.y * self.x;
+        let x = self.y * rhs.z - self.z * rhs.y;
+        let y = self.z * rhs.x - self.x * rhs.z;
+        let z = self.x * rhs.y - self.y * rhs.x;
 
         Self { x, y, z }
     }
@@ -78,6 +81,15 @@ where
             y: val,
             z: val,
         }
+    }
+}
+
+impl<T> Display for Vec3<T>
+where
+    T: Display,
+{
+    fn fmt(&self, fmt: &mut Formatter) -> fmt::Result {
+        fmt.write_fmt(format_args!("[ {}, {}, {} ]", self.x, self.y, self.z))
     }
 }
 
