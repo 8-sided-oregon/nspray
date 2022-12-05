@@ -4,18 +4,16 @@
 
 use core::{
     cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd},
-    fmt::{self, Display, Formatter, Write},
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
+    fmt::{self, Display, Formatter},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
 use alloc::{
-    fmt::format,
     format,
     string::{String, ToString},
 };
 use ndless::prelude::Float;
-
-use crate::dprintln;
+use oorandom::Rand32;
 
 pub const PI: FixedI32 = FixedI32::from_dec(3, 14159, 5);
 
@@ -65,10 +63,12 @@ impl FixedI32 {
         }
     }
 
+    /// Reasonably accurate tangent approximation.
     pub fn tan(self) -> Self {
         self.sin() / self.cos()
     }
 
+    /// Reasonably accurate sine approximation.
     pub fn sin(self) -> Self {
         let mut sign = self.value.signum();
         let mut r = (self * sign).modulo(PI * 2);
@@ -85,6 +85,7 @@ impl FixedI32 {
         r - r.pow(3) / 6 + r.pow(5) / 120 - r.pow(7) / 5040 * sign
     }
 
+    /// Reasonably accurate cosine approximation.
     pub fn cos(self) -> Self {
         (PI / 2 + self).sin()
     }
@@ -114,12 +115,19 @@ impl FixedI32 {
     pub fn clamp(self, begin: i32, end: i32) -> Self {
         let w = self.value >> 16;
 
-        if self.value <= begin {
+        if w <= begin {
             Self { value: begin << 16 }
-        } else if self.value >= end {
+        } else if w >= end {
             Self { value: end << 16 }
         } else {
             self
+        }
+    }
+
+    /// Generates a new FixedI32 in the range of [0, 1)
+    pub fn rand(rng: &mut Rand32) -> Self {
+        Self {
+            value: (rng.rand_u32() & 0xffff) as i32,
         }
     }
 }
@@ -313,6 +321,16 @@ impl Sub<i32> for FixedI32 {
 impl SubAssign for FixedI32 {
     fn sub_assign(&mut self, rhs: Self) {
         self.value -= rhs.value;
+    }
+}
+
+impl Neg for FixedI32 {
+    type Output = Self;
+
+    fn neg(mut self) -> Self::Output {
+        self.value *= -1;
+
+        self
     }
 }
 

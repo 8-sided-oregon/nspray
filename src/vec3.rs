@@ -1,13 +1,16 @@
 use core::{
+    borrow::BorrowMut,
     fmt::{self, Display, Formatter},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };
 
-use crate::fixed::FixedI32;
+use oorandom::Rand32;
+
+use crate::{fixed::FixedI32, fxi32};
 
 pub type Vec3FI32 = Vec3<FixedI32>;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Vec3<T> {
     pub x: T,
     pub y: T,
@@ -56,17 +59,18 @@ impl Vec3<FixedI32> {
     pub fn unit_vector(self) -> Self {
         self / self.mag()
     }
-}
 
-impl<T> Default for Vec3<T>
-where
-    T: Default,
-{
-    fn default() -> Self {
-        Self {
-            x: T::default(),
-            y: T::default(),
-            z: T::default(),
+    pub fn random_in_unit_sphere(rand: &mut Rand32) -> Self {
+        loop {
+            let v = Self {
+                x: FixedI32::rand(rand),
+                y: FixedI32::rand(rand),
+                z: FixedI32::rand(rand),
+            };
+
+            if v.mag_squared() <= fxi32!(1) {
+                return v;
+            }
         }
     }
 }

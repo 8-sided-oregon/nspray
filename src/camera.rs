@@ -1,5 +1,3 @@
-use alloc::format;
-
 use crate::{
     fixed::{self, FixedI32},
     fxi32,

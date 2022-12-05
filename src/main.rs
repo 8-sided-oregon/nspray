@@ -5,15 +5,15 @@
 
 //#![cfg_attr(not(feature = "std"), no_std)]
 
-use core::time::Duration;
+use core::cell::UnsafeCell;
 
-use alloc::format;
 use camera::Camera;
 use caster::Renderer;
 use ndless::{
     input::{self, wait_key_pressed},
     thread,
 };
+use oorandom::Rand32;
 use screen::{blit_buffer, deinit_screen, init_screen};
 use vec3::Vec3FI32;
 use world::World;
@@ -25,6 +25,7 @@ extern crate ndless_sys;
 extern crate ndless_handler;
 
 extern crate alloc;
+extern crate oorandom;
 
 mod camera;
 mod caster;
@@ -52,9 +53,8 @@ fn main() {
 
     let renderer = Renderer::new(camera, World {}, 320, 240);
 
-    renderer.render_scene(&mut screen_buff, &mut |buffer, line| {
+    renderer.render_scene(&mut screen_buff, &mut |buffer, _| {
         blit_buffer(buffer);
-        //ndless::msg::msg("Hey", &format!("{line}"));
     });
 
     blit_buffer(&mut screen_buff);
