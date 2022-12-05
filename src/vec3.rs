@@ -1,5 +1,4 @@
 use core::{
-    borrow::BorrowMut,
     fmt::{self, Display, Formatter},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };

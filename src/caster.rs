@@ -15,15 +15,17 @@ pub struct Renderer {
     scene: World,
     width: u16,
     height: u16,
+    samples: u16,
 }
 
 impl Renderer {
-    pub fn new(camera: Camera, scene: World, width: u16, height: u16) -> Self {
+    pub fn new(camera: Camera, scene: World, width: u16, height: u16, samples: u16) -> Self {
         Self {
             camera,
             scene,
             width,
             height,
+            samples,
         }
     }
 
@@ -52,7 +54,7 @@ impl Renderer {
                     .get_ray(step_u * (j as i32), step_v * (i as i32));
 
                 let mut color = Vec3FI32::default();
-                for _ in 0..25 {
+                for _ in 0..self.samples {
                     let new_ray = Ray::new(
                         ray.origin(),
                         ray.dir()
@@ -64,7 +66,7 @@ impl Renderer {
                     );
                     color += self.ray_color(&new_ray, &s1, &mut rand, 5);
                 }
-                color = color / fxi32!(25);
+                color = color / fxi32!(self.samples);
 
                 let r: i32 = (color.x * 0x1f).into();
                 let g: i32 = (color.y * 0x1f).into();
