@@ -3,6 +3,7 @@ use core::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
 };
 
+use alloc::format;
 use oorandom::Rand32;
 
 use crate::{fixed::FixedI32, fxi32};
@@ -51,14 +52,6 @@ where
 }
 
 impl Vec3<FixedI32> {
-    pub fn mag(self) -> FixedI32 {
-        self.mag_squared().sqrt()
-    }
-
-    pub fn unit_vector(self) -> Self {
-        self / self.mag()
-    }
-
     pub fn random_in_unit_sphere(rand: &mut Rand32) -> Self {
         loop {
             let v = Self {
@@ -71,6 +64,18 @@ impl Vec3<FixedI32> {
                 return v;
             }
         }
+    }
+
+    pub fn mag(self) -> FixedI32 {
+        self.mag_squared().sqrt()
+    }
+
+    pub fn unit_vector(self) -> Self {
+        self / self.mag()
+    }
+
+    pub fn near_zero(&self) -> bool {
+        self.x.abs() < fxi32!(0.001) && self.y.abs() < fxi32!(0.001) && self.z.abs() < fxi32!(0.001)
     }
 }
 

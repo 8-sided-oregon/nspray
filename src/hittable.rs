@@ -1,11 +1,15 @@
-use crate::{fixed::FixedI32, fxi32, ray::Ray, vec3::Vec3FI32};
+use alloc::{boxed::Box, format, rc::Rc, vec::Vec};
 
-#[derive(Default)]
+use crate::{fixed::FixedI32, fxi32, material::Material, ray::Ray, vec3::Vec3FI32};
+
+#[derive(Default, Clone)]
 pub struct HitRecord {
     pub point: Vec3FI32,
     pub normal: Vec3FI32,
     pub t: FixedI32,
     pub front: bool,
+    pub attenuation: Vec3FI32,
+    pub material: Option<Rc<dyn Material>>,
 }
 
 impl HitRecord {
@@ -27,11 +31,16 @@ pub trait Hittable {
 pub struct Sphere {
     center: Vec3FI32,
     radius: FixedI32,
+    material: Option<Rc<dyn Material>>,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3FI32, radius: FixedI32) -> Self {
-        Self { center, radius }
+    pub fn new(center: Vec3FI32, radius: FixedI32, material: Option<Rc<dyn Material>>) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -43,6 +52,8 @@ impl Hittable for Sphere {
         let half_b = oc.dot(ray.dir());
         let c = oc.mag_squared() - self.radius * self.radius;
 
+        // lol
+        #[allow(clippy::suspicious_operation_groupings)]
         let discriminant = half_b * half_b - a * c;
 
         if discriminant < fxi32!(0) {
@@ -66,6 +77,38 @@ impl Hittable for Sphere {
         let outward_normal = (record.point - self.center) / self.radius;
         record.set_face_normal(ray, outward_normal);
 
+        record.material = self.material.clone();
+
         true
+    }
+}
+
+pub struct HittableList {
+    objects: Vec<Box<dyn Hittable>>,
+}
+
+impl HittableList {
+    pub fn new(objects: Vec<Box<dyn Hittable>>) -> Self {
+        HittableList { objects }
+    }
+}
+
+impl Hittable for HittableList {
+    fn hit(&self, ray: &Ray, record: &mut HitRecord, t_min: FixedI32, t_max: FixedI32) -> bool {
+        let mut min_dist = t_max;
+        let mut has_hit = false;
+        let mut tmp_rec = HitRecord::default();
+
+        for object in self.objects.iter() {
+            if object.hit(ray, &mut tmp_rec, t_min, t_max) {
+                has_hit = true;
+                if tmp_rec.t < min_dist {
+                    *record = tmp_rec.clone();
+                    min_dist = record.t;
+                }
+            }
+        }
+
+        has_hit
     }
 }

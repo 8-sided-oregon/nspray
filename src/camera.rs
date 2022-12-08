@@ -7,7 +7,7 @@ use crate::{
 
 pub struct Camera {
     origin: Vec3FI32,
-    bottom_left: Vec3FI32,
+    top_left: Vec3FI32,
     horizontal: Vec3FI32,
     vertical: Vec3FI32,
 }
@@ -32,11 +32,11 @@ impl Camera {
         let horizontal = u * viewport_width;
         let vertical = v * viewport_height;
 
-        let bottom_left = origin - horizontal / fxi32!(2) - vertical / fxi32!(2) - w;
+        let top_left = origin - horizontal / fxi32!(2) + vertical / fxi32!(2) - w;
 
         Self {
             origin,
-            bottom_left,
+            top_left,
             horizontal,
             vertical,
         }
@@ -45,7 +45,7 @@ impl Camera {
     pub fn get_ray(&self, u: FixedI32, v: FixedI32) -> Ray {
         Ray::new(
             self.origin,
-            self.bottom_left + self.horizontal * u + self.vertical * v - self.origin,
+            self.top_left + self.horizontal * u - self.vertical * v - self.origin,
         )
     }
 }
