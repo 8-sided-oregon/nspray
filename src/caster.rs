@@ -28,18 +28,15 @@ impl Renderer {
         }
     }
 
-    pub fn render_scene<F>(&self, buffer: &mut [u16], progress_callback: &mut F)
-    where
+    pub fn render_scene<F>(
+        &self,
+        screen_buff: &mut [u16],
+        rgb_buff: &mut [u8],
+        progress_callback: &mut F,
+    ) where
         F: FnMut(&mut [u16], u16),
     {
         let mut rand = Rand32::new(1);
-
-        let expected = (self.width as usize) * (self.height as usize);
-        assert_eq!(
-            buffer.len(),
-            expected,
-            "Image buffer is not the correct size."
-        );
 
         let step_v = fxi32!(1) / (self.height as i32);
         let step_u = fxi32!(1) / (self.width as i32);
@@ -65,9 +62,15 @@ impl Renderer {
                 }
                 color = color / fxi32!(self.samples);
 
-                let r: i32 = (color.x.sqrt() * 0x1f).into();
-                let g: i32 = (color.y.sqrt() * 0x1f).into();
-                let b: i32 = (color.z.sqrt() * 0x1f).into();
+                // 1/2 Gamma correction
+                color.x = color.x.sqrt();
+                color.y = color.y.sqrt();
+                color.z = color.z.sqrt();
+
+                // RGB555
+                let r: i32 = (color.x * 0x1f).into();
+                let g: i32 = (color.y * 0x1f).into();
+                let b: i32 = (color.z * 0x1f).into();
 
                 let r = r.clamp(0, 0x1f) as u16;
                 let g = g.clamp(0, 0x1f) as u16;
@@ -75,12 +78,24 @@ impl Renderer {
 
                 let index = (i as usize) * (self.width as usize) + (j as usize);
 
-                // RGB555
-                buffer[index] = r << 10 | g << 5 | b;
+                screen_buff[index] = r << 10 | g << 5 | b;
+
+                // RGB888
+                let r: i32 = (color.x * 0xff).into();
+                let g: i32 = (color.y * 0xff).into();
+                let b: i32 = (color.z * 0xff).into();
+
+                let r = r.clamp(0, 0xff) as u8;
+                let g = g.clamp(0, 0xff) as u8;
+                let b = b.clamp(0, 0xff) as u8;
+
+                rgb_buff[index * 3] = r;
+                rgb_buff[index * 3 + 1] = g;
+                rgb_buff[index * 3 + 2] = b;
             }
 
             if i % 10 == 0 {
-                progress_callback(buffer, i);
+                progress_callback(screen_buff, i);
             }
         }
     }

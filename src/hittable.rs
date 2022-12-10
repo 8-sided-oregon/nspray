@@ -112,3 +112,5 @@ impl Hittable for HittableList {
         has_hit
     }
 }
+
+pub struct Plane {}
