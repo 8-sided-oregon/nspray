@@ -20,7 +20,7 @@ use camera::Camera;
 use caster::Renderer;
 use hittable::{Hittable, HittableList, Sphere};
 use material::{Lambertian, Metal};
-use ndless::input::wait_key_pressed;
+use ndless::{fs::File, input::wait_key_pressed, io::BufWriter};
 use screen::{blit_buffer, deinit_screen, init_screen};
 use vec3::Vec3FI32;
 
@@ -48,9 +48,16 @@ mod vec3;
 const IMG_WIDTH: usize = 320;
 const IMG_HEIGHT: usize = 240;
 
+// This is a really bad idea
+static mut LOG_FILE: Option<BufWriter<File>> = None;
+
 fn main() {
     // let mut screen_buff = [0u16; IMG_WIDTH * IMG_HEIGHT];
     // let mut rgb_buff = [0u8; IMG_WIDTH * IMG_HEIGHT * 3];
+
+    unsafe {
+        LOG_FILE = Some(BufWriter::new(File::create("log1.txt.tns").unwrap()));
+    }
 
     let mut screen_buff = vec![0u16; IMG_WIDTH * IMG_HEIGHT];
     let mut rgb_buff = vec![0u8; IMG_WIDTH * IMG_HEIGHT * 3];
@@ -128,4 +135,8 @@ fn main() {
     wait_key_pressed();
 
     deinit_screen();
+
+    unsafe {
+        LOG_FILE = None;
+    }
 }

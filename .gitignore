@@ -1,2 +1,4 @@
 /target
 upload.sh
+cat_log.sh
+log.txt

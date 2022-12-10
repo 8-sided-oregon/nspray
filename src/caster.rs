@@ -2,6 +2,7 @@ use oorandom::Rand32;
 
 use crate::{
     camera::Camera,
+    dprintln,
     fixed::FixedI32,
     fxi32,
     hittable::{HitRecord, Hittable, HittableList},
@@ -36,6 +37,8 @@ impl Renderer {
     ) where
         F: FnMut(&mut [u16], u16),
     {
+        dprintln!("God zane is so cute");
+
         let mut rand = Rand32::new(1);
 
         let step_v = fxi32!(1) / (self.height as i32);

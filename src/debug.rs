@@ -1,5 +1,8 @@
 // Tyler, if you're reading this, just... don't ask.
 
+use crate::LOG_FILE;
+use ndless::io::Write;
+
 #[cfg(test)]
 extern "C" {
     fn write(fd: i32, buf: *const u8, count: usize) -> i32;
@@ -12,6 +15,7 @@ macro_rules! dprintln {
     };
 }
 
+#[allow(dead_code)]
 #[cfg(test)]
 pub fn dprint_str(dstr: &str) {
     let nl = "\n";
@@ -23,4 +27,11 @@ pub fn dprint_str(dstr: &str) {
 }
 
 #[cfg(not(test))]
-pub fn dprint_str(dstr: &str) {}
+pub fn dprint_str(dstr: &str) {
+    let file = unsafe { LOG_FILE.as_mut() }.unwrap();
+
+    file.write_all(dstr.as_bytes())
+        .expect("Failed to log message");
+
+    file.write_all(b"\n").expect("Failed to write newline");
+}
