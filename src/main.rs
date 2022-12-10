@@ -20,7 +20,7 @@ use camera::Camera;
 use caster::Renderer;
 use hittable::{Hittable, HittableList, Sphere};
 use material::{Lambertian, Metal};
-use ndless::{fs::File, input::wait_key_pressed, io::BufWriter};
+use ndless::{fs::File, input::wait_key_pressed, io::BufWriter, io::Write, time::SystemTime};
 use screen::{blit_buffer, deinit_screen, init_screen};
 use vec3::Vec3FI32;
 
@@ -50,13 +50,12 @@ const IMG_HEIGHT: usize = 240;
 
 // This is a really bad idea
 static mut LOG_FILE: Option<BufWriter<File>> = None;
+static mut START_TIME: Option<SystemTime> = None;
 
 fn main() {
-    // let mut screen_buff = [0u16; IMG_WIDTH * IMG_HEIGHT];
-    // let mut rgb_buff = [0u8; IMG_WIDTH * IMG_HEIGHT * 3];
-
     unsafe {
-        LOG_FILE = Some(BufWriter::new(File::create("log1.txt.tns").unwrap()));
+        LOG_FILE = Some(BufWriter::new(File::create("nspray_log.txt.tns").unwrap()));
+        START_TIME = Some(SystemTime::now());
     }
 
     let mut screen_buff = vec![0u16; IMG_WIDTH * IMG_HEIGHT];
@@ -68,8 +67,6 @@ fn main() {
         return;
     }
     let sample_count = sample_count.unwrap();
-
-    // let sample_count = 1;
 
     let camera = Camera::new(
         Vec3FI32::new(fxi32!(0), fxi32!(0), fxi32!(0)),
@@ -128,15 +125,21 @@ fn main() {
         blit_buffer(buffer);
     });
 
+    dprintln!("Finished rendering");
+
     dither::dither(&rgb_buff, &mut screen_buff);
+
+    dprintln!("Finished dithering");
 
     blit_buffer(&mut screen_buff);
 
     wait_key_pressed();
 
+    dprintln!("Deinitializing screen...");
+
     deinit_screen();
 
     unsafe {
-        LOG_FILE = None;
+        LOG_FILE.take().unwrap().flush().unwrap();
     }
 }

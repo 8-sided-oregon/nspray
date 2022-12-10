@@ -27,10 +27,6 @@ pub fn dither(in_img: &[u8], out_img: &mut [u16]) {
                     (((color + error_buff[out_index]) * 0x1f) / 0xff).clamp(0, 0x1f);
                 let error = (converted_color * 0xff / 0x1f) - color;
 
-                if c == 0 {
-                    dprintln!("index: {out_index}, error: {}", error_buff[out_index]);
-                }
-
                 out_img[out_index] |= (converted_color as u16) << ((2 - c) * 5);
 
                 for k in 0..2 {

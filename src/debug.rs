@@ -1,7 +1,8 @@
 // Tyler, if you're reading this, just... don't ask.
 
-use crate::LOG_FILE;
-use ndless::io::Write;
+use crate::{LOG_FILE, START_TIME};
+use alloc::format;
+use ndless::{io::Write, time::SystemTime};
 
 #[cfg(test)]
 extern "C" {
@@ -15,23 +16,30 @@ macro_rules! dprintln {
     };
 }
 
-#[allow(dead_code)]
-#[cfg(test)]
-pub fn dprint_str(dstr: &str) {
-    let nl = "\n";
+// #[allow(dead_code)]
+// #[cfg(test)]
+// pub fn dprint_str(dstr: &str) {
+//     let nl = "\n";
 
-    unsafe {
-        write(1, dstr.as_ptr(), dstr.len());
-        write(1, nl.as_ptr(), 1);
-    }
-}
+//     unsafe {
+//         write(1, dstr.as_ptr(), dstr.len());
+//         write(1, nl.as_ptr(), 1);
+//     }
+// }
 
-#[cfg(not(test))]
 pub fn dprint_str(dstr: &str) {
     let file = unsafe { LOG_FILE.as_mut() }.unwrap();
+    let duration = unsafe { START_TIME.as_ref().unwrap().clone() };
 
-    file.write_all(dstr.as_bytes())
-        .expect("Failed to log message");
+    let msg = format!(
+        "[{:5}]: {}\n",
+        SystemTime::now()
+            .duration_since(duration)
+            .expect("Failed to take time measurement")
+            .as_secs(),
+        dstr,
+    );
 
-    file.write_all(b"\n").expect("Failed to write newline");
+    file.write_all(msg.as_bytes())
+        .expect("Failed logging message");
 }
