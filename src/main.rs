@@ -24,6 +24,8 @@ use ndless::{fs::File, input::wait_key_pressed, io::BufWriter, io::Write, time::
 use screen::{blit_buffer, deinit_screen, init_screen};
 use vec3::Vec3FI32;
 
+use crate::{hittable::Plane, material::CheckeredLambertian};
+
 extern crate ndless;
 extern crate ndless_sys;
 
@@ -40,6 +42,7 @@ mod dither;
 mod fixed;
 mod hittable;
 mod material;
+mod matrix;
 mod ray;
 mod screen;
 mod tests;
@@ -76,11 +79,10 @@ fn main() {
         fxi32!(IMG_WIDTH as i32) / fxi32!(IMG_HEIGHT as i32),
     );
 
-    let ground_material = Rc::new(Lambertian::new(Vec3FI32::new(
-        fxi32!(0.2),
-        fxi32!(0.95),
-        fxi32!(0.2),
-    )));
+    let ground_material = Rc::new(CheckeredLambertian::new(
+        Vec3FI32::new(fxi32!(0.95), fxi32!(0.95), fxi32!(0.2)),
+        Vec3FI32::new(fxi32!(0.2), fxi32!(0.2), fxi32!(0.95)),
+    ));
 
     let basic_material = Rc::new(Lambertian::new(Vec3FI32::new(
         fxi32!(0.95),
@@ -94,9 +96,10 @@ fn main() {
     ));
 
     let world_vec: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Sphere::new(
-            Vec3FI32::new(fxi32!(0), fxi32!(-101.5), fxi32!(0)),
-            fxi32!(100.0),
+        Box::new(Plane::new(
+            Vec3FI32::new(fxi32!(0.0), fxi32!(-1.0), fxi32!(0.0)),
+            Vec3FI32::new(fxi32!(0.0), fxi32!(0.0), fxi32!(-1.0)),
+            Vec3FI32::new(fxi32!(1.0), fxi32!(0.0), fxi32!(0.0)),
             Some(ground_material),
         )),
         Box::new(Sphere::new(

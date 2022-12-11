@@ -21,7 +21,12 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, rand: &mut Rand32, ray: &Ray, record: &HitRecord) -> Option<(Ray, Vec3FI32)> {
+    fn scatter(
+        &self,
+        rand: &mut Rand32,
+        _ray: &Ray,
+        record: &HitRecord,
+    ) -> Option<(Ray, Vec3FI32)> {
         let mut scattered_dir = record.normal + Vec3FI32::random_in_unit_sphere(rand);
 
         if scattered_dir.near_zero() {
@@ -29,6 +34,45 @@ impl Material for Lambertian {
         }
 
         Some((Ray::new(record.point, scattered_dir), self.albedo))
+    }
+}
+
+pub struct CheckeredLambertian {
+    albedo1: Vec3FI32,
+    albedo2: Vec3FI32,
+}
+
+impl CheckeredLambertian {
+    pub fn new(albedo1: Vec3FI32, albedo2: Vec3FI32) -> Self {
+        Self { albedo1, albedo2 }
+    }
+}
+
+impl Material for CheckeredLambertian {
+    fn scatter(
+        &self,
+        rand: &mut Rand32,
+        _ray: &Ray,
+        record: &HitRecord,
+    ) -> Option<(Ray, Vec3FI32)> {
+        let mut scattered_dir = record.normal + Vec3FI32::random_in_unit_sphere(rand);
+
+        if scattered_dir.near_zero() {
+            scattered_dir = record.normal;
+        }
+
+        let mut albedo = self.albedo1;
+
+        if let Some(ref mapped) = record.mapped_point {
+            let x = mapped.x.modulo(fxi32!(2)).abs();
+            let y = mapped.y.modulo(fxi32!(2)).abs();
+
+            if (x > fxi32!(1) && y < fxi32!(1)) || (x < fxi32!(1) && y > fxi32!(1)) {
+                albedo = self.albedo2;
+            }
+        }
+
+        Some((Ray::new(record.point, scattered_dir), albedo))
     }
 }
 

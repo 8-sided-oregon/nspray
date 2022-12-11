@@ -1,10 +1,19 @@
 use alloc::{boxed::Box, format, rc::Rc, vec::Vec};
 
-use crate::{fixed::FixedI32, fxi32, material::Material, ray::Ray, vec3::Vec3FI32};
+use crate::{
+    dprintln,
+    fixed::FixedI32,
+    fxi32,
+    material::Material,
+    matrix::{Matrix3x3, Matrix3x3FI32},
+    ray::Ray,
+    vec3::Vec3FI32,
+};
 
 #[derive(Default, Clone)]
 pub struct HitRecord {
     pub point: Vec3FI32,
+    pub mapped_point: Option<Vec3FI32>,
     pub normal: Vec3FI32,
     pub t: FixedI32,
     pub front: bool,
@@ -78,6 +87,66 @@ impl Hittable for Sphere {
         record.set_face_normal(ray, outward_normal);
 
         record.material = self.material.clone();
+        record.mapped_point = None;
+
+        true
+    }
+}
+
+pub struct Plane {
+    center: Vec3FI32,
+    normal: Vec3FI32,
+    inverse: Matrix3x3FI32,
+    material: Option<Rc<dyn Material>>,
+}
+
+impl Plane {
+    pub fn new(
+        center: Vec3FI32,
+        v: Vec3FI32,
+        u: Vec3FI32,
+        material: Option<Rc<dyn Material>>,
+    ) -> Self {
+        let normal = v.cross(u);
+        let inverse =
+            Matrix3x3FI32::new([v.x, u.x, normal.x, v.y, u.y, normal.y, v.z, u.z, normal.z]);
+
+        dprintln!(
+            "v: {v}, u: {u}, n: {normal}, mat: {inverse} inv: {}",
+            inverse.invert()
+        );
+        let inverse = inverse.invert();
+
+        Self {
+            center,
+            normal,
+            inverse,
+            material,
+        }
+    }
+}
+
+impl Hittable for Plane {
+    fn hit(&self, ray: &Ray, record: &mut HitRecord, t_min: FixedI32, t_max: FixedI32) -> bool {
+        let denom = ray.dir().dot(self.normal);
+
+        if denom.abs() < fxi32!(0.01) {
+            return false;
+        }
+
+        let t = (self.center - ray.origin()).dot(self.normal) / denom;
+
+        if t < t_min || t > t_max {
+            return false;
+        }
+
+        record.t = t;
+        record.point = ray.at(t);
+        record.mapped_point = Some(self.inverse * (record.point - self.center));
+        record.set_face_normal(ray, self.normal);
+        record.material = self.material.clone();
+
+        //dprintln!("Mapped: {}", record.mapped_point.unwrap());
 
         true
     }
@@ -112,5 +181,3 @@ impl Hittable for HittableList {
         has_hit
     }
 }
-
-pub struct Plane {}

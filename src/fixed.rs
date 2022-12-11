@@ -248,7 +248,11 @@ impl Display for FixedI32 {
             frac_str = format!("{:.5}", (frac as f64) / 2f64.powi(PREC))[1..].to_string();
         }
 
-        f.write_fmt(format_args!("{}{}", self.value.abs() >> PREC, frac_str))
+        f.write_fmt(format_args!(
+            "{}{}",
+            (self.value.abs() >> PREC) * self.value.signum(),
+            frac_str
+        ))
     }
 }
 

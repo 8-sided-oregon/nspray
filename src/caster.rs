@@ -116,7 +116,7 @@ impl Renderer {
 
         let mut rec = HitRecord::default();
 
-        if world.hit(ray, &mut rec, fxi32!(0.001), fxi32!(1000)) {
+        if world.hit(ray, &mut rec, fxi32!(0.001), fxi32!(200)) {
             if let Some(ref material) = rec.material {
                 if let Some((new_ray, attenuation)) = material.scatter(rand, ray, &rec) {
                     return self.ray_color(&new_ray, world, rand, ray_num - 1) * attenuation;
