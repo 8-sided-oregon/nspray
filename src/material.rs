@@ -49,12 +49,7 @@ impl CheckeredLambertian {
 }
 
 impl Material for CheckeredLambertian {
-    fn scatter(
-        &self,
-        rand: &mut Rand32,
-        _ray: &Ray,
-        record: &HitRecord,
-    ) -> Option<(Ray, Vec3FI32)> {
+    fn scatter(&self, rand: &mut Rand32, ray: &Ray, record: &HitRecord) -> Option<(Ray, Vec3FI32)> {
         let mut scattered_dir = record.normal + Vec3FI32::random_in_unit_sphere(rand);
 
         if scattered_dir.near_zero() {

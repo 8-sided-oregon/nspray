@@ -31,16 +31,13 @@ impl Renderer {
 
     pub fn render_scene<F>(
         &self,
+        rand: &mut Rand32,
         screen_buff: &mut [u16],
         rgb_buff: &mut [u8],
         progress_callback: &mut F,
     ) where
         F: FnMut(&mut [u16], u16),
     {
-        dprintln!("God zane is so cute");
-
-        let mut rand = Rand32::new(1);
-
         let step_v = fxi32!(1) / (self.height as i32);
         let step_u = fxi32!(1) / (self.width as i32);
 
@@ -56,12 +53,12 @@ impl Renderer {
                         ray.origin(),
                         ray.dir()
                             + Vec3FI32::new(
-                                FixedI32::rand(&mut rand) / 300,
-                                FixedI32::rand(&mut rand) / 300,
-                                FixedI32::rand(&mut rand) / 300,
+                                FixedI32::rand(rand) / 300,
+                                FixedI32::rand(rand) / 300,
+                                FixedI32::rand(rand) / 300,
                             ),
                     );
-                    color += self.ray_color(&new_ray, &self.scene, &mut rand, 10);
+                    color += self.ray_color(&new_ray, &self.scene, rand, 10);
                 }
                 color = color / fxi32!(self.samples);
 
@@ -116,7 +113,7 @@ impl Renderer {
 
         let mut rec = HitRecord::default();
 
-        if world.hit(ray, &mut rec, fxi32!(0.001), fxi32!(200)) {
+        if world.hit(ray, &mut rec, fxi32!(0.001), fxi32!(50)) {
             if let Some(ref material) = rec.material {
                 if let Some((new_ray, attenuation)) = material.scatter(rand, ray, &rec) {
                     return self.ray_color(&new_ray, world, rand, ray_num - 1) * attenuation;

@@ -18,9 +18,11 @@
 use alloc::{boxed::Box, rc::Rc, vec, vec::Vec};
 use camera::Camera;
 use caster::Renderer;
+use fixed::FixedI32;
 use hittable::{Hittable, HittableList, Sphere};
 use material::{Lambertian, Metal};
 use ndless::{fs::File, input::wait_key_pressed, io::BufWriter, io::Write, time::SystemTime};
+use oorandom::Rand32;
 use screen::{blit_buffer, deinit_screen, init_screen};
 use vec3::Vec3FI32;
 
@@ -55,12 +57,85 @@ const IMG_HEIGHT: usize = 240;
 static mut LOG_FILE: Option<BufWriter<File>> = None;
 static mut START_TIME: Option<SystemTime> = None;
 
-fn main() {
-    unsafe {
-        LOG_FILE = Some(BufWriter::new(File::create("nspray_log.txt.tns").unwrap()));
-        START_TIME = Some(SystemTime::now());
+fn gen_scene(rand: &mut Rand32) -> HittableList {
+    let ground_material = Rc::new(CheckeredLambertian::new(
+        Vec3FI32::new(fxi32!(0.95), fxi32!(0.95), fxi32!(0.2)),
+        Vec3FI32::new(fxi32!(0.2), fxi32!(0.2), fxi32!(0.95)),
+    ));
+
+    let red_ball_mat = Rc::new(Lambertian::new(Vec3FI32::new(
+        fxi32!(0.95),
+        fxi32!(0.2),
+        fxi32!(0.2),
+    )));
+
+    let green_ball_mat = Rc::new(Lambertian::new(Vec3FI32::new(
+        fxi32!(0.2),
+        fxi32!(0.95),
+        fxi32!(0.2),
+    )));
+
+    let blue_ball_mat = Rc::new(Lambertian::new(Vec3FI32::new(
+        fxi32!(0.2),
+        fxi32!(0.2),
+        fxi32!(0.95),
+    )));
+
+    let metal_ball_mat = Rc::new(Metal::new(
+        fxi32!(0.5),
+        Vec3FI32::new(fxi32!(0.7), fxi32!(0.7), fxi32!(0.7)),
+    ));
+
+    let mirror_ball_mat = Rc::new(Metal::new(
+        fxi32!(0.1),
+        Vec3FI32::new(fxi32!(0.7), fxi32!(0.7), fxi32!(0.7)),
+    ));
+
+    let mut world_vec: Vec<Box<dyn Hittable>> = vec![
+        Box::new(Plane::new(
+            Vec3FI32::new(fxi32!(0.0), fxi32!(-1.0), fxi32!(0.0)),
+            Vec3FI32::new(fxi32!(0.0), fxi32!(0.0), fxi32!(1.0)),
+            Vec3FI32::new(fxi32!(1.0), fxi32!(0.0), fxi32!(0.0)),
+            Some(ground_material),
+        )),
+        Box::new(Sphere::new(
+            Vec3FI32::new(fxi32!(2.0), fxi32!(2), fxi32!(-2)),
+            fxi32!(2),
+            Some(red_ball_mat.clone()),
+        )),
+        Box::new(Sphere::new(
+            Vec3FI32::new(fxi32!(4.0), fxi32!(2), fxi32!(2)),
+            fxi32!(2),
+            Some(green_ball_mat.clone()),
+        )),
+        Box::new(Sphere::new(
+            Vec3FI32::new(fxi32!(6.0), fxi32!(2), fxi32!(-2)),
+            fxi32!(2),
+            Some(blue_ball_mat.clone()),
+        )),
+        Box::new(Sphere::new(
+            Vec3FI32::new(fxi32!(-2.5), fxi32!(2), fxi32!(-2)),
+            fxi32!(2),
+            Some(mirror_ball_mat.clone()),
+        )),
+    ];
+
+    for _ in 0..30 {
+        world_vec.push(Box::new(Sphere::new(
+            Vec3FI32::new(
+                FixedI32::rand(rand) * 30 - fxi32!(15),
+                fxi32!(0),
+                FixedI32::rand(rand) * 30 - fxi32!(15),
+            ),
+            fxi32!(1.0),
+            Some(metal_ball_mat.clone()),
+        )));
     }
 
+    HittableList::new(world_vec)
+}
+
+fn main() {
     let mut screen_buff = vec![0u16; IMG_WIDTH * IMG_HEIGHT];
     let mut rgb_buff = vec![0u8; IMG_WIDTH * IMG_HEIGHT * 3];
 
@@ -71,52 +146,26 @@ fn main() {
     }
     let sample_count = sample_count.unwrap();
 
+    unsafe {
+        LOG_FILE = Some(BufWriter::new(File::create("nspray_log.txt.tns").unwrap()));
+        START_TIME = Some(SystemTime::now());
+    }
+
+    dprintln!("Initializing... Selected iterations: {sample_count}");
+
     let camera = Camera::new(
+        Vec3FI32::new(fxi32!(2), fxi32!(6), fxi32!(6)),
         Vec3FI32::new(fxi32!(0), fxi32!(0), fxi32!(0)),
-        Vec3FI32::new(fxi32!(0), fxi32!(0), fxi32!(-1)),
         Vec3FI32::new(fxi32!(0), fxi32!(1), fxi32!(0)),
         fxi32!(45),
         fxi32!(IMG_WIDTH as i32) / fxi32!(IMG_HEIGHT as i32),
     );
 
-    let ground_material = Rc::new(CheckeredLambertian::new(
-        Vec3FI32::new(fxi32!(0.95), fxi32!(0.95), fxi32!(0.2)),
-        Vec3FI32::new(fxi32!(0.2), fxi32!(0.2), fxi32!(0.95)),
-    ));
-
-    let basic_material = Rc::new(Lambertian::new(Vec3FI32::new(
-        fxi32!(0.95),
-        fxi32!(0.2),
-        fxi32!(0.2),
-    )));
-
-    let cooler_material = Rc::new(Metal::new(
-        fxi32!(0.1),
-        Vec3FI32::new(fxi32!(0.7), fxi32!(0.7), fxi32!(0.7)),
-    ));
-
-    let world_vec: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Plane::new(
-            Vec3FI32::new(fxi32!(0.0), fxi32!(-1.0), fxi32!(0.0)),
-            Vec3FI32::new(fxi32!(0.0), fxi32!(0.0), fxi32!(-1.0)),
-            Vec3FI32::new(fxi32!(1.0), fxi32!(0.0), fxi32!(0.0)),
-            Some(ground_material),
-        )),
-        Box::new(Sphere::new(
-            Vec3FI32::new(fxi32!(2.0), fxi32!(0), fxi32!(-2)),
-            fxi32!(1.35),
-            Some(cooler_material),
-        )),
-        Box::new(Sphere::new(
-            Vec3FI32::new(fxi32!(-0.5), fxi32!(0), fxi32!(-2)),
-            fxi32!(1),
-            Some(basic_material),
-        )),
-    ];
+    let mut rand = Rand32::new(2);
 
     let renderer = Renderer::new(
         camera,
-        HittableList::new(world_vec),
+        gen_scene(&mut rand),
         IMG_WIDTH as u16,
         IMG_HEIGHT as u16,
         sample_count as u16,
@@ -124,9 +173,14 @@ fn main() {
 
     init_screen();
 
-    renderer.render_scene(&mut screen_buff, &mut rgb_buff, &mut |buffer, _| {
-        blit_buffer(buffer);
-    });
+    renderer.render_scene(
+        &mut rand,
+        &mut screen_buff,
+        &mut rgb_buff,
+        &mut |buffer, _| {
+            blit_buffer(buffer);
+        },
+    );
 
     dprintln!("Finished rendering");
 
