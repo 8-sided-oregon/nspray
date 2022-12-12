@@ -137,12 +137,7 @@ fn main() {
     let mut screen_buff = vec![0u16; IMG_WIDTH * IMG_HEIGHT];
     let mut rgb_buff = vec![0u8; IMG_WIDTH * IMG_HEIGHT * 3];
 
-    let sample_count = ndless::msg::msg_numeric(
-        "Sample Input",
-        "Input the sample count",
-        "How many samples?",
-        (1, 100),
-    );
+    let sample_count = ndless::msg::msg_numeric("Sample Input", "", "How many samples?", (1, 100));
     if sample_count.is_none() {
         return;
     }
@@ -150,7 +145,7 @@ fn main() {
 
     let lens_blur = ndless::msg::msg_2b(
         "Defocus Blur",
-        "Input whether or not you want defocus blur",
+        "Do you want defocus blur (depth of field)",
         "Yes",
         "No",
     ) == Button::One;

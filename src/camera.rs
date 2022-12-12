@@ -13,6 +13,8 @@ pub struct Camera {
     horizontal: Vec3FI32,
     vertical: Vec3FI32,
     lens_radius: FixedI32,
+    u: Vec3FI32,
+    v: Vec3FI32,
 }
 
 impl Camera {
@@ -46,6 +48,8 @@ impl Camera {
             horizontal,
             vertical,
             lens_radius,
+            u,
+            v,
         }
     }
 
@@ -56,13 +60,13 @@ impl Camera {
         )
     }
 
-    pub fn get_ray_blur(&self, rand: &mut Rand32, u: FixedI32, v: FixedI32) -> Ray {
+    pub fn get_ray_blur(&self, rand: &mut Rand32, s: FixedI32, t: FixedI32) -> Ray {
         let rd = Vec3FI32::random_in_unit_disk(rand) * self.lens_radius;
-        let offset = u * rd.x + v * rd.y;
+        let offset = self.u * rd.x + self.v * rd.y;
 
         Ray::new(
             self.origin + offset,
-            self.top_left + self.horizontal * u - self.vertical * v - self.origin - offset,
+            self.top_left + self.horizontal * s - self.vertical * t - self.origin - offset,
         )
     }
 }

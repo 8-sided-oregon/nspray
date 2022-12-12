@@ -37,23 +37,24 @@ where
             - self.state[0] * self.state[5] * self.state[7]
     }
 
+    #[allow(clippy::many_single_char_names)]
     pub fn invert(self) -> Self
     where
         T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Neg<Output = T> + DivAssign,
     {
-        let A = self.state[4] * self.state[8] - self.state[5] * self.state[7];
-        let B = -(self.state[3] * self.state[8] - self.state[5] * self.state[6]);
-        let C = self.state[3] * self.state[7] - self.state[4] * self.state[6];
+        let a = self.state[4] * self.state[8] - self.state[5] * self.state[7];
+        let b = -(self.state[3] * self.state[8] - self.state[5] * self.state[6]);
+        let c = self.state[3] * self.state[7] - self.state[4] * self.state[6];
 
-        let D = -(self.state[1] * self.state[8] - self.state[2] * self.state[7]);
-        let E = self.state[0] * self.state[8] - self.state[2] * self.state[6];
-        let F = -(self.state[0] * self.state[7] - self.state[1] * self.state[6]);
+        let d = -(self.state[1] * self.state[8] - self.state[2] * self.state[7]);
+        let e = self.state[0] * self.state[8] - self.state[2] * self.state[6];
+        let f = -(self.state[0] * self.state[7] - self.state[1] * self.state[6]);
 
-        let G = self.state[1] * self.state[5] - self.state[2] * self.state[4];
-        let H = -(self.state[0] * self.state[5] - self.state[2] * self.state[3]);
-        let I = self.state[0] * self.state[4] - self.state[1] * self.state[3];
+        let g = self.state[1] * self.state[5] - self.state[2] * self.state[4];
+        let h = -(self.state[0] * self.state[5] - self.state[2] * self.state[3]);
+        let i = self.state[0] * self.state[4] - self.state[1] * self.state[3];
 
-        Matrix3x3::new([A, D, G, B, E, H, C, F, I]) / self.det()
+        Matrix3x3::new([a, d, g, b, e, h, c, f, i]) / self.det()
     }
 }
 
