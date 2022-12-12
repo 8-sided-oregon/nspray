@@ -66,6 +66,20 @@ impl Vec3<FixedI32> {
         }
     }
 
+    pub fn random_in_unit_disk(rand: &mut Rand32) -> Self {
+        loop {
+            let v = Self {
+                x: FixedI32::rand(rand),
+                y: FixedI32::rand(rand),
+                z: fxi32!(0),
+            };
+
+            if v.mag_squared() <= fxi32!(1) {
+                return v;
+            }
+        }
+    }
+
     pub fn mag(self) -> FixedI32 {
         self.mag_squared().sqrt()
     }

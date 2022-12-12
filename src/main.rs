@@ -7,12 +7,8 @@
 
 /* Hello! Welcome to my cool raytracer program!
  *
- * If for some extremely strange reason you wish to modify this code or take note of it, please
- * note the following quirks and things that I've discovered:
- *
- * # You cannot use the entire range of usable memory if you try and allocate it with arrays
- *   (e.g. [0u8; 1024 * 1024 * 1024 * 3]). If you try and do that, the calculator hangs. Instead,
- *   you have to use Vectors and dynamic allocation.
+ * If for some extremely strange reason you wish to modify this code or take note of this code I
+ * wish you luck.
  */
 
 use alloc::{boxed::Box, rc::Rc, vec, vec::Vec};
@@ -21,7 +17,9 @@ use caster::Renderer;
 use fixed::FixedI32;
 use hittable::{Hittable, HittableList, Sphere};
 use material::{Lambertian, Metal};
-use ndless::{fs::File, input::wait_key_pressed, io::BufWriter, io::Write, time::SystemTime};
+use ndless::{
+    fs::File, input::wait_key_pressed, io::BufWriter, io::Write, msg::Button, time::SystemTime,
+};
 use oorandom::Rand32;
 use screen::{blit_buffer, deinit_screen, init_screen};
 use vec3::Vec3FI32;
@@ -139,19 +137,33 @@ fn main() {
     let mut screen_buff = vec![0u16; IMG_WIDTH * IMG_HEIGHT];
     let mut rgb_buff = vec![0u8; IMG_WIDTH * IMG_HEIGHT * 3];
 
-    let sample_count =
-        ndless::msg::msg_numeric("Sample Input", "Weeeeeeeeee", "How many samples?", (1, 100));
+    let sample_count = ndless::msg::msg_numeric(
+        "Sample Input",
+        "Input the sample count",
+        "How many samples?",
+        (1, 100),
+    );
     if sample_count.is_none() {
         return;
     }
     let sample_count = sample_count.unwrap();
+
+    let lens_blur = ndless::msg::msg_2b(
+        "Defocus Blur",
+        "Input whether or not you want defocus blur",
+        "Yes",
+        "No",
+    ) == Button::One;
 
     unsafe {
         LOG_FILE = Some(BufWriter::new(File::create("nspray_log.txt.tns").unwrap()));
         START_TIME = Some(SystemTime::now());
     }
 
-    dprintln!("Initializing... Selected iterations: {sample_count}");
+    dprintln!("Initializing... Selected iterations: {sample_count}, Defocus blur: {lens_blur}");
+
+    let apeture = if lens_blur { fxi32!(0.1) } else { fxi32!(0) };
+    let focus_dist = if lens_blur { fxi32!(10) } else { fxi32!(1) };
 
     let camera = Camera::new(
         Vec3FI32::new(fxi32!(2), fxi32!(6), fxi32!(6)),
@@ -159,6 +171,8 @@ fn main() {
         Vec3FI32::new(fxi32!(0), fxi32!(1), fxi32!(0)),
         fxi32!(45),
         fxi32!(IMG_WIDTH as i32) / fxi32!(IMG_HEIGHT as i32),
+        apeture,
+        focus_dist,
     );
 
     let mut rand = Rand32::new(2);
@@ -169,6 +183,7 @@ fn main() {
         IMG_WIDTH as u16,
         IMG_HEIGHT as u16,
         sample_count as u16,
+        lens_blur,
     );
 
     init_screen();

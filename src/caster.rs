@@ -16,16 +16,25 @@ pub struct Renderer {
     width: u16,
     height: u16,
     samples: u16,
+    lens_blur: bool,
 }
 
 impl Renderer {
-    pub fn new(camera: Camera, scene: HittableList, width: u16, height: u16, samples: u16) -> Self {
+    pub fn new(
+        camera: Camera,
+        scene: HittableList,
+        width: u16,
+        height: u16,
+        samples: u16,
+        lens_blur: bool,
+    ) -> Self {
         Self {
             camera,
             scene,
             width,
             height,
             samples,
+            lens_blur,
         }
     }
 
@@ -43,9 +52,13 @@ impl Renderer {
 
         for i in 0..self.height {
             for j in 0..self.width {
-                let ray = self
-                    .camera
-                    .get_ray(step_u * (j as i32), step_v * (i as i32));
+                let ray = if self.lens_blur {
+                    self.camera
+                        .get_ray_blur(rand, step_u * (j as i32), step_v * (i as i32))
+                } else {
+                    self.camera
+                        .get_ray_noblur(step_u * (j as i32), step_v * (i as i32))
+                };
 
                 let mut color = Vec3FI32::default();
                 for _ in 0..self.samples {
